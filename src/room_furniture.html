@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html ng-app="furnitureListApp">
+<head>
+    <title>Furniture List</title>
+    <meta charset="UTF-8">
+    <script src="Libraries/angular.js"></script>
+    <link href="Libraries/bootstrap.css" rel="stylesheet" />
+    <link href="Libraries/bootstrap-theme.css" rel="stylesheet" />
+    <link href="css/room.css" rel="stylesheet" />
+    <link href="css/bootstrap.css" rel="stylesheet" />
+    <link href="css/bootstrap-theme.css" rel="stylesheet" />
+    <script src="Libraries/mouseCoords.js" defer></script>
+
+    <script>
+        var model = {
+            room: {name: "Спальня", width: 300, height: 430, x: 890, y: 333},
+            furniture: [{name: "Кровать", x: 0, y: 0, width: 100, height: 210, color: "red"},
+                {name: "Шкаф", x: 0, y: 0, width: 140, height: 145, color: "green"},
+                {name: "Стол", x: 0, y: 0, width: 60, height: 120, color: "#654321"},
+                {name: "Стул", x: 0, y: 0, width: 40, height: 40, color: "pink"},
+                {name: "Стенка", x: 0, y: 0, width: 30, height: 110, color: "grey"},
+                {name: "Диван", x: 0, y: 0, width: 100, height: 210, color: "black"}]
+        };
+
+        var furnitureListApp = angular.module("furnitureListApp", []);
+
+        furnitureListApp.controller("FurnitureListCtrl", function ($scope) {
+            $scope.list = model;
+            $scope.addNewFurniture = function () {
+                if ($scope.name != null && $scope.width <= $scope.list.room.width && $scope.height <= $scope.list.room.height) {
+                    if ($scope.color == null) {
+                        $scope.color = "red";
+                    }
+                    $scope.list.furniture.push({name: $scope.name, x: 0, y: 0, width: $scope.width, height: $scope.height, color: $scope.color});
+                    $scope.name = "";
+                    $scope.width = "";
+                    $scope.height = "";
+                    $scope.color = "";
+                } else {
+                    if ($scope.name == null) {
+                        alert("Name is null!");
+                    }
+                    if ($scope.width > $scope.list.room.width) {
+                        alert("Width is too big. Max value is " + $scope.list.room.width);
+                    }
+                    if ($scope.height > $scope.list.room.height) {
+                        alert("Height is too big. Max value is " + $scope.list.room.height);
+                    }
+                }
+            };
+            $scope.mouse = {x: function() { return MouseCoords.getX(window.event)},
+                y: function() { return MouseCoords.getY(window.event)}, divX: null, divY: null, selectFurnitureIndex: null};
+            $scope.deleteFurniture = function(a) {
+                $scope.list.furniture.splice(a, 1);
+            };
+            $scope.rotateFurniture = function(a) {
+                if ($scope.list.furniture[a].height <= $scope.list.room.width && $scope.list.furniture[a].width <= $scope.list.room.height) {
+                    $scope.height = $scope.list.furniture[a].height;
+                    $scope.list.furniture[a].height = $scope.list.furniture[a].width;
+                    $scope.list.furniture[a].width = $scope.height;
+                    if ($scope.list.furniture[a].x + $scope.list.furniture[a].width > $scope.list.room.width) {
+                        $scope.newX = $scope.list.furniture[a].x - ($scope.list.furniture[a].x + $scope.list.furniture[a].width - $scope.list.room.width);
+                        $scope.list.furniture[a].x = $scope.newX;
+                    }
+                    if ($scope.list.furniture[a].y + $scope.list.furniture[a].height > $scope.list.room.height) {
+                        $scope.newY = $scope.list.furniture[a].y - ($scope.list.furniture[a].y + $scope.list.furniture[a].height - $scope.list.room.height);
+                        $scope.list.furniture[a].y = $scope.newY;
+                    }
+                } else {
+                    alert("You can't rotate this element");
+                }
+            };
+            $scope.holdObject = function(a) {
+                $scope.f = $scope.list.furniture[a];
+                $scope.mouse.selectFurnitureIndex = a;
+                $scope.mouse.divX = $scope.f.x();
+                $scope.mouse.divY = $scope.f.y();
+            };
+            $scope.objectFree = function() {
+                $scope.mouse.selectFurnitureIndex = null;
+                $scope.mouse.divX = null;
+                $scope.mouse.divY = null;
+            };
+            $scope.objectMove = function () {
+                if ($scope.mouse.selectFurnitureIndex != null) {
+                    $scope.list.furniture[$scope.mouse.selectFurnitureIndex].x = $scope.mouse.x() - $scope.list.room.x;
+                    $scope.list.furniture[$scope.mouse.selectFurnitureIndex].y = $scope.mouse.y() - $scope.list.room.y;
+                    if ($scope.mouse.x() < $scope.list.room.x) {
+                        $scope.list.furniture[$scope.mouse.selectFurnitureIndex].x = 0;
+                    }
+                    if ($scope.mouse.x() > $scope.list.room.x + $scope.list.room.width - $scope.list.furniture[$scope.mouse.selectFurnitureIndex].width) {
+                        $scope.list.furniture[$scope.mouse.selectFurnitureIndex].x = $scope.list.room.width - $scope.list.furniture[$scope.mouse.selectFurnitureIndex].width;
+                    }
+                    if ($scope.mouse.y() < $scope.list.room.y) {
+                        $scope.list.furniture[$scope.mouse.selectFurnitureIndex].y = 0;
+                    }
+                    if ($scope.mouse.y() > $scope.list.room.y + $scope.list.room.height - $scope.list.furniture[$scope.mouse.selectFurnitureIndex].height) {
+                        $scope.list.furniture[$scope.mouse.selectFurnitureIndex].y = $scope.list.room.height - $scope.list.furniture[$scope.mouse.selectFurnitureIndex].height;
+                    }
+                }
+            };
+            $scope.roomStyle = function () {
+                $scope.style = "";
+                $scope.style += "height: " + $scope.list.room.height + "px; width: " + $scope.list.room.width + "px; left: "
+                        + $scope.list.room.x + "px; top: " + $scope.list.room.y + "px";
+                return $scope.style;
+            };
+            $scope.furnitureStyle = function(furniture) {
+                $scope.style = "";
+                $scope.style += "height: " + furniture.height + "px; width: " + furniture.width + "px; background: "
+                        + furniture.color + "; left: " + furniture.x + "px; top: " + furniture.y + "px";
+                return $scope.style;
+            };
+            $scope.newWidth = function(a) {
+                if ($scope.list.furniture[a].x + $scope.list.furniture[a].width > $scope.list.room.width) {
+                    $scope.newX = $scope.list.furniture[a].x - ($scope.list.furniture[a].x + $scope.list.furniture[a].width - $scope.list.room.width);
+                    $scope.list.furniture[a].x = $scope.newX;
+                }
+            };
+            $scope.newHeight = function(a) {
+                if ($scope.list.furniture[a].y + $scope.list.furniture[a].height > $scope.list.room.height) {
+                    $scope.newY = $scope.list.furniture[a].y - ($scope.list.furniture[a].y + $scope.list.furniture[a].height - $scope.list.room.height);
+                    $scope.list.furniture[a].y = $scope.newY;
+                }
+            }
+        });
+
+    </script>
+</head>
+<body ng-controller="FurnitureListCtrl" ng-mousemove="objectMove()">
+<div class="container">
+    <div class="page-header">
+        <div class="page-header">
+            <h1>
+                Планировщик комнаты.
+            </h1>
+            <h3>Комната: {{list.room.name}} {{list.room.width}}x{{list.room.height}}. Количество мебели - {{list.furniture.length}}</h3>
+        </div>
+    </div>
+    <div class="panel">
+
+        <div class="h4">Добавить мебель:</div>
+        <form class="form-horizontal row">
+            <label for="thingName" class="col-sm-1 control-label">Название:</label>
+            <div class="col-sm-2">
+                <input ng-model="name" type="text" class="form-control" id="thingName" placeholder="стол">
+            </div>
+
+            <label for="thingWidth" class="col-sm-1 control-label">Ширина:</label>
+            <div class="col-sm-1">
+                <input ng-model="width" type="number" onkeyup="this.value = this.value.replace (/\D/, '')" class="form-control" id="thingWidth" placeholder="100" min="0" max="{{list.room.width}}">
+            </div>
+
+            <label for="thingHeight" class="col-sm-1 control-label">Длина:</label>
+            <div class="col-sm-1">
+                <input ng-model="height" type="number" onkeyup="this.value = this.value.replace (/\D/, '')" class="form-control" id="thingHeight" placeholder="120" min="0" max="{{list.room.height}}">
+            </div>
+
+            <label for="thingColor" class="col-sm-1 control-label">Цвет:</label>
+            <div class="col-sm-2">
+                <input ng-model="color" type="text" class="form-control" id="thingColor" placeholder="red or #FF00DD">
+            </div>
+
+            <div class="col-sm-2">
+        <span class="input-group-btn">
+            <button class="btn btn-default" ng-click="addNewFurniture()">Добавить</button>
+        </span>
+            </div>
+        </form>
+
+        <div class="row debug_message">
+            <div class="h4">Координаты мыши: X = {{mouse.x()}}, Y = {{mouse.y()}}</div>
+        </div>
+
+        <h3>Вся мебель в комнате</h3>
+        <table class="table table-hover" style="width: 600px">
+            <thead>
+            <tr>
+                <th>№</th>
+                <th>Имя</th>
+                <th>Координаты</th>
+                <th>Ширина*Высота</th>
+                <th> </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="furniture in list.furniture">
+                <td>
+                    {{$index + 1}}
+                </td>
+                <td style="width: 70px">
+                    {{furniture.name}}
+                </td>
+                <td style="width: 70px" >
+                    x={{furniture.x}} <br/> y={{furniture.y}}
+                </td>
+                <td style="width: 200px">
+                    <div class="col-xs-7">
+                        <input ng-model="furniture.width" type="number" onkeyup="this.value = this.value.replace (/\D/, '')" class="form-control"  ng-change="newWidth($index)" min="0" max="{{list.room.width}}">
+                    </div>
+                    <div class="col-xs-7">
+                        <input ng-model="furniture.height" type="number" onkeyup="this.value = this.value.replace (/\D/, '')" class="form-control"  ng-change="newHeight($index)" min="0" max="{{list.room.height}}">
+                    </div>
+                </td>
+                <td>
+                    <div class="col-xs-8">
+                        <button class="btn btn-default" ng-click="deleteFurniture($index)">Удалить</button>
+                    </div>
+                    <div class="col-xs-8">
+                        <button class="btn btn-default" ng-click="rotateFurniture($index)">Повернуть</button>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div style="{{roomStyle()}}" class="main_field">
+        <div ng-repeat="furniture in list.furniture" class="thing_css" style="{{furnitureStyle(furniture)}}"
+            ng-mousedown="holdObject($index)" ng-mouseup="objectFree()">
+            {{furniture.name}}
+        </div>
+    </div>
+</div>
+</body>
+</html>
