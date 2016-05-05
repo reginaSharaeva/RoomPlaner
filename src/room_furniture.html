@@ -27,25 +27,23 @@
         furnitureListApp.controller("FurnitureListCtrl", function ($scope) {
             $scope.list = model;
             $scope.addNewFurniture = function () {
-                if ($scope.name != null && $scope.width <= $scope.list.room.width && $scope.height <= $scope.list.room.height) {
-                    if ($scope.color == null) {
-                        $scope.color = "red";
-                    }
+                if ($scope.width == null || $scope.width == "") {
+                    $scope.width = 0;
+                }
+                if ($scope.height == null || $scope.height == "") {
+                    $scope.height = 0;
+                }
+                if ($scope.color == null) {
+                    $scope.color = "red";
+                }
+                if ($scope.name == null || $scope.name == "") {
+                    alert("Name is null!");
+                } else {
                     $scope.list.furniture.push({name: $scope.name, x: 0, y: 0, width: $scope.width, height: $scope.height, color: $scope.color});
                     $scope.name = "";
                     $scope.width = "";
                     $scope.height = "";
                     $scope.color = "";
-                } else {
-                    if ($scope.name == null) {
-                        alert("Name is null!");
-                    }
-                    if ($scope.width > $scope.list.room.width) {
-                        alert("Width is too big. Max value is " + $scope.list.room.width);
-                    }
-                    if ($scope.height > $scope.list.room.height) {
-                        alert("Height is too big. Max value is " + $scope.list.room.height);
-                    }
                 }
             };
             $scope.mouse = {x: function() { return MouseCoords.getX(window.event)},
@@ -71,10 +69,9 @@
                 }
             };
             $scope.holdObject = function(a) {
-                $scope.f = $scope.list.furniture[a];
                 $scope.mouse.selectFurnitureIndex = a;
-                $scope.mouse.divX = $scope.f.x();
-                $scope.mouse.divY = $scope.f.y();
+                $scope.mouse.divX = $scope.mouse.x() - $scope.list.furniture[a].x - $scope.list.room.x;
+                $scope.mouse.divY = $scope.mouse.y() - $scope.list.furniture[a].y - $scope.list.room.y;
             };
             $scope.objectFree = function() {
                 $scope.mouse.selectFurnitureIndex = null;
@@ -83,20 +80,25 @@
             };
             $scope.objectMove = function () {
                 if ($scope.mouse.selectFurnitureIndex != null) {
-                    $scope.list.furniture[$scope.mouse.selectFurnitureIndex].x = $scope.mouse.x() - $scope.list.room.x;
-                    $scope.list.furniture[$scope.mouse.selectFurnitureIndex].y = $scope.mouse.y() - $scope.list.room.y;
-                    if ($scope.mouse.x() < $scope.list.room.x) {
-                        $scope.list.furniture[$scope.mouse.selectFurnitureIndex].x = 0;
+                    $scope.a = $scope.mouse.selectFurnitureIndex;
+                    $scope.rX = $scope.mouse.x() - $scope.mouse.divX - $scope.list.room.x;
+                    $scope.rY = $scope.mouse.y() - $scope.mouse.divY - $scope.list.room.y;
+                    if ($scope.rX < 0) {
+                        $scope.rX = 0;
                     }
-                    if ($scope.mouse.x() > $scope.list.room.x + $scope.list.room.width - $scope.list.furniture[$scope.mouse.selectFurnitureIndex].width) {
-                        $scope.list.furniture[$scope.mouse.selectFurnitureIndex].x = $scope.list.room.width - $scope.list.furniture[$scope.mouse.selectFurnitureIndex].width;
+                    if ($scope.rY < 0) {
+                        $scope.rY = 0;
                     }
-                    if ($scope.mouse.y() < $scope.list.room.y) {
-                        $scope.list.furniture[$scope.mouse.selectFurnitureIndex].y = 0;
+                    if ($scope.rX > $scope.list.room.width - $scope.list.furniture[$scope.a].width) {
+                        $scope.rX = $scope.list.room.width - $scope.list.furniture[$scope.a].width;
                     }
-                    if ($scope.mouse.y() > $scope.list.room.y + $scope.list.room.height - $scope.list.furniture[$scope.mouse.selectFurnitureIndex].height) {
-                        $scope.list.furniture[$scope.mouse.selectFurnitureIndex].y = $scope.list.room.height - $scope.list.furniture[$scope.mouse.selectFurnitureIndex].height;
+                    if ($scope.rY > $scope.list.room.height - $scope.list.furniture[$scope.a].height) {
+                        $scope.rY = $scope.list.room.height - $scope.list.furniture[$scope.a].height;
                     }
+                    $scope.list.furniture[$scope.a].x = $scope.rX;
+                    $scope.list.furniture[$scope.a].y = $scope.rY;
+                    $scope.mouse.divX = $scope.mouse.x() - $scope.list.furniture[$scope.a].x - $scope.list.room.x ;
+                    $scope.mouse.divY = $scope.mouse.y() - $scope.list.furniture[$scope.a].y - $scope.list.room.y;
                 }
             };
             $scope.roomStyle = function () {
